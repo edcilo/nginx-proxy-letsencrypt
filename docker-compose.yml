@@ -11,6 +11,7 @@ services:
     volumes:
       - ./docker/proxy/certs:/etc/nginx/certs
       - ./docker/proxy/vhost:/etc/nginx/vhost.d
+      - ./docker/proxy/conf:/etc/nginx/conf.d
       - ./docker/proxy/html:/usr/share/nginx/html
       - /var/run/docker.sock:/tmp/docker.sock:ro
     networks:

@@ -1,0 +1,46 @@
+version: "3.8"
+
+services:
+  proxy:
+    container_name: proxy
+    image: nginxproxy/nginx-proxy
+    restart: always
+    ports:
+      - 80:80
+      - 443:443
+    volumes:
+      - ./docker/proxy/certs:/etc/nginx/certs
+      - ./docker/proxy/vhost:/etc/nginx/vhost.d
+      - ./docker/proxy/html:/usr/share/nginx/html
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - proxyNet
+
+  letsencrypt:
+    container_name: letsencrypt
+    image: nginxproxy/acme-companion
+    restart: always
+    volumes_from:
+      - proxy
+    volumes:
+      - ./docker/letsencrypt/acme:/etc/acme.sh
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    environment:
+      DEFAULT_EMAIL: ${LETSENCRYPT_EMAIL}
+    networks:
+      - proxyNet
+
+  nginx:
+    container_name: nginx
+    image: nginx:alpine
+    environment:
+      VIRTUAL_HOST: ${PROXY_HOST}
+      VIRTUAL_PORT: ${PROXY_PORT}
+      LETSENCRYPT_HOST: ${LETSENCRYPT_HOST}
+    networks:
+      - proxyNet
+
+networks:
+  proxyNet:
+    driver: "bridge"
+
